@@ -13,7 +13,7 @@
     - [x] Best Fit
     - [x] Next Fit
     - [ ] Buddy System
-    - [ ] Open Script for Analyzing
+    - [x] Open Script for Analyzing
 
 ### [ ] Other TODO
     - [ ] Comment Function Summary

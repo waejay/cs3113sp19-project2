@@ -122,7 +122,6 @@ void allocate_process(Process process, char* main_memory[], int address)
  *      1 - successful allocation
  *      0 - no allocation
  */
-/*
 int first_fit(char* main_memory[], Process process, int size)
 {
     int current_memory_block_address = 0;
@@ -152,7 +151,7 @@ int first_fit(char* main_memory[], Process process, int size)
             //... until we find a large enough available memory block size
             if (current_memory_block_size == process.size)
             {
-               printf("Found available set of memory at address %d\n", current_memory_block_address); 
+               //printf("Found available set of memory at address %d\n", current_memory_block_address); 
                allocate_process(process, main_memory, current_memory_block_address);
 
 
@@ -167,7 +166,6 @@ int first_fit(char* main_memory[], Process process, int size)
     return 0;
 
 } 
-*/
 
 /*
  * Function: next_fit
@@ -177,7 +175,6 @@ int first_fit(char* main_memory[], Process process, int size)
  *      1 - successful allocation
  *      0 - no allocation
  */
-/*
 int next_fit(char* main_memory[], Process process, int size)
 {
     int current_memory_block_address = previous_allocated_address;
@@ -207,18 +204,18 @@ int next_fit(char* main_memory[], Process process, int size)
             //... until we find a large enough available memory block size
             if (current_memory_block_size == process.size)
             {
-               printf("Found available set of memory at address %d\n", current_memory_block_address); 
+               //printf("Found available set of memory at address %d\n", current_memory_block_address); 
                allocate_process(process, main_memory, current_memory_block_address);
                previous_allocated_address = current_memory_block_address;
 
-               return 1;
+               return previous_allocated_address;
             }
         }
     }
     
 
-    printf("ERROR: no allocation possible\n");
-    return 0; 
+    return -1; 
+    /*
     // If no next fit is possible from previuos allocated address
     //  start from beginning
     for (int i = 0; i < previous_allocated_address; i++)
@@ -253,8 +250,8 @@ int next_fit(char* main_memory[], Process process, int size)
             }
         }
     }
+    */
 } 
-*/
 
 /*
  * Function: best_fit
@@ -272,7 +269,7 @@ int best_fit(char* main_memory[], Process process, int size)
     int current_memory_block_address = 0;
     int current_memory_block_size = 0;
     int smallest_memory_block_size = size;
-    printf("best fit: size of process is %d\n", process.size);
+    //printf("best fit: size of process is %d\n", process.size);
 
     for (int i = 0; i < size; i++)
     {
@@ -290,7 +287,7 @@ int best_fit(char* main_memory[], Process process, int size)
             if (current_memory_block_size == 0) 
             {
                 current_memory_block_address = i;
-                printf("current address : %d\n", current_memory_block_address);
+                //printf("current address : %d\n", current_memory_block_address);
             }
 
             // Keep incrementing ...
@@ -306,12 +303,12 @@ int best_fit(char* main_memory[], Process process, int size)
                 if (strcmp(main_memory[i + 1], "NULL") != 0)
                 {
                     // If current memory block size is smaller than smallest memory block size
-                    printf("current memory block size : %d\n", current_memory_block_size);
+                    //printf("current memory block size : %d\n", current_memory_block_size);
                     if (current_memory_block_size < smallest_memory_block_size)
                     {
                         if (current_memory_block_size >= process.size)
                         {
-                            printf("Found new smallest block size\n");
+                            //printf("Found new smallest block size\n");
                             smallest_memory_block_size = current_memory_block_size;
                             best_address = current_memory_block_address;
                         }
@@ -325,7 +322,7 @@ int best_fit(char* main_memory[], Process process, int size)
                 {
                     if (current_memory_block_size >= process.size)
                     {
-                        printf("Found new smallest block size\n");
+                        //printf("Found new smallest block size\n");
                         smallest_memory_block_size = current_memory_block_size;
                         best_address = current_memory_block_address;
                     }
@@ -336,20 +333,20 @@ int best_fit(char* main_memory[], Process process, int size)
 
     if (best_address == -1)
     {
-       printf("ERROR: no allocation possible\n");
-       return 0;
+       return -1;
     } 
 
-    printf("smallest block size starts at address: %d\n", best_address);
+    //printf("smallest block size starts at address: %d\n", best_address);
     allocate_process(process, main_memory, best_address);
-    return 1;
+    return best_address;
 }
 
-
-
-void processBestFitScript(FILE* file_script, char* main_memory[], int size)
+int buddy(char* main_memory[], Process process, int size)
 {
-    printAllMemory(main_memory, size);
+    return 0;
+}
+void processScript(FILE* file_script, char* main_memory[], char* memory_algorithm_option, int size)
+{
     char line_buffer[100];
     int allocation_success = 0;
     int temp;
@@ -369,32 +366,57 @@ void processBestFitScript(FILE* file_script, char* main_memory[], int size)
         if (strcmp(commands[0], "REQUEST") == 0)
         {
             Process new_process = createProcess(commands[1], commands[2]);
-            printf("current process is : %s\n", commands[1]);
-            allocation_success = best_fit(main_memory, new_process, size);
-            printMemory(main_memory, size);
+            //printf("current process is : %s\n", commands[1]);
 
+            if (strcmp(memory_algorithm_option, "BESTFIT") == 0)
+            {
+                allocation_success = best_fit(main_memory, new_process, size);
+            }
+            else if (strcmp(memory_algorithm_option, "FIRSTFIT") == 0) 
+            { 
+                allocation_success = first_fit(main_memory, new_process, size);
+            }
+            else if (strcmp(memory_algorithm_option, "NEXTFIT") == 0)
+            {
+                allocation_success = next_fit(main_memory, new_process, size);
+            }
+            else if (strcmp(memory_algorithm_option, "BUDDYFIT") == 0)
+            {
+                allocation_success = buddy(main_memory, new_process, size);
+            }
+            
+            if (allocation_success > -1)
+            {
+                printf("ALLOCATED %s %d\n", new_process.name, allocation_success);
+            }
+            else
+            {
+                printf("FAIL REQUEST %s %d\n", new_process.name, new_process.size);
+            }
         }
         if (strcmp(commands[0], "RELEASE") == 0)
         {
-
-            printf("%s\n", commands[1]);
-
+            int isReleased = 0;
             for (int i = 0; i < size; i++)
             {
                 if (strcmp(main_memory[i], commands[1]) == 0)
                 {
-
+                    isReleased = 1;
                     strcpy(main_memory[i], "NULL");
                 }
             }
-            
-            printMemory(main_memory, size);
+
+            if (isReleased != 1)
+            {
+               printf("FAIL RELEASE %s\n", commands[1]); 
+            }
         }
 
         if (strcmp(commands[0], "LIST") == 0)
         {
             if (strcmp(commands[1], "AVAILABLE") == 0)
             {
+                int isFull = 0;
                 int num_allocated = 0;
                 int current_address = 0;
                 int current_size_block = 0;
@@ -407,8 +429,14 @@ void processBestFitScript(FILE* file_script, char* main_memory[], int size)
                             printf("(%d, %d)\n", current_size_block, current_address); 
                             num_allocated++;
                         }
+                        else if (current_size_block == 0 && current_address + 1 == size)
+                        {
+                            isFull = 1;
+                            break;
+                        }
                         current_address = i + 1;
                         current_size_block = 0;
+
                     }
                     else
                     {
@@ -423,11 +451,19 @@ void processBestFitScript(FILE* file_script, char* main_memory[], int size)
                             }
                         }
                     }
+
                 }
+                if (isFull)
+                {
+                    printf("FULL\n");
+                    break;
+                }
+
                 
             }
             else if (strcmp(commands[1], "ASSIGNED") == 0)
             {
+                int isEmpty = 1;
                 char* process_name;
                 int process_size;
                 int current_address;
@@ -438,22 +474,36 @@ void processBestFitScript(FILE* file_script, char* main_memory[], int size)
                     {
                         process_name = main_memory[i];
                         process_size++;
-                        current_address = i;
+                        isEmpty = 0;
 
                         if (i + 1 != size)
                         {
                            if (strcmp(process_name, main_memory[i + 1]) != 0)
                            {
-
+                                printf("(%s, %d, %d)\n", process_name, process_size, current_address);                                
+                                current_address = i + 1;
+                                process_size = 0;
+                                continue;
                            } 
+                        }
+                        else
+                        {
+                            if (process_size > 0)
+                            {
+                                printf("(%s, %d, %d)\n", process_name, process_size, current_address);
+                            }
                         }
                     }
                     else
                     {
-
+                        process_size = 0;
+                        current_address = i + 1;
                     }
-
-
+                    if (isEmpty)
+                    {
+                        printf("NONE\n");
+                        break;
+                    }
                 }
             }
             else
@@ -465,29 +515,38 @@ void processBestFitScript(FILE* file_script, char* main_memory[], int size)
 
         if (strcmp(commands[0], "FIND") == 0)
         {
+            int process_size = 0;
+            int current_address = -1;
 
+            int i = 0;
+            while (i < size)
+            {
+                // If a match is found..
+                if (strcmp(main_memory[i], commands[1]) == 0)
+                {
+                    process_size++;
+                    if (current_address == -1) current_address = i;
+                }
+                else
+                {
+                    if (process_size > 0)
+                    {
+                        printf("%s, %d, %d\n", commands[1], process_size, current_address);
+                        break;
+                    }
+                    else if (i + 1 == size && process_size == 0)
+                    {
+                        printf("FAULT\n");
+                        break;
+                    }
+                }
+                i++;
+            }
         }
 
     }
 
 }
-
-
-void processFirstFitScript(FILE* file_script, char* main_memory[], int size)
-{
-}
-
-
-void processNextFitScript(FILE* file_script, char* main_memory[], int size)
-{
-}
-
-
-void processBuddyScript(FILE* file_script, char* main_memory[], int size)
-{
-}
-
-
 
 /*
  * Function: main
@@ -531,27 +590,7 @@ int main(int argc, char** argv)
     // -----------------------------
     if (file_script)
     {
-
-        if (strcmp(memory_algorithm_option, "BESTFIT") == 0)
-        {
-            processBestFitScript(file_script, main_memory, TOTAL_ALLOC_SIZE);
-        }
-        if (strcmp(memory_algorithm_option, "FIRSTFIT") == 0)
-        {
-            processFirstFitScript(file_script, main_memory, TOTAL_ALLOC_SIZE);
-        }
-
-        if (strcmp(memory_algorithm_option, "NEXTFIT") == 0)
-        {
-            processNextFitScript(file_script, main_memory, TOTAL_ALLOC_SIZE);
-        }
-
-        if (strcmp(memory_algorithm_option, "BUDDY") == 0)
-        {
-            processBuddyScript(file_script, main_memory, TOTAL_ALLOC_SIZE);
-        }
-
-
+        processScript(file_script, main_memory, memory_algorithm_option, TOTAL_ALLOC_SIZE);
     }
     else
     {
