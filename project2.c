@@ -1,24 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #define NUM_ELEMENTS(x) (sizeof(x) / sizeof(x[0]))
 
 
 // -----------------------------
 // Structures
-//  - Block   : block of memory (8 bytes)
 //  - Process : process with size in bytes
 // -----------------------------
-
-struct Block
-{
-    char* process_name;
-    int total_size;
-    int used_size;
-    int isOccupied;
-};
-
 
 struct Process
 {
@@ -32,15 +23,6 @@ struct Process
 // -----------------------------
 
 
-void setBlock(struct Block *block, struct Process process)
-{
-    block->process_name = process.name;
-    block->total_size = 8;
-    block->used_size = process.size;
-    block->isOccupied = 1;
-}
-
-
 /*
  * Function: printMemory
  *  prints each address of memory
@@ -48,23 +30,45 @@ void setBlock(struct Block *block, struct Process process)
  *  @memory  : memory structure to print
  *  @size    : number of blocks
  */
-void printMemory(int main_memory[], int size)
+void printMemory(char* main_memory[], int size)
 {
-    
-}
 
+    int number_null = 0;
 
-void initializeMemoryBlocks(struct Block memory[], int num_blocks)
-{
-    for (int i = 0; i < num_blocks; i++)
+    for (int i = 0; i < size; i++)
     {
-        memory[i].process_name = "NULL";
-        memory[i].total_size = 8;
-        memory[i].used_size = 0;
-        memory[i].isOccupied = 0;  
+       // Check if current address has no process
+       if (strcmp(main_memory[i], "NULL") == 0)
+       {
+           number_null++;
+       }
+       else
+       {
+           number_null = 0;
+       }
+
+       // If too many empty addresses, skip printing NULL addresses
+       if (number_null > 5)
+       {
+           if (number_null % 10 == 0) { printf("...\n"); }
+           continue;
+       }
+       else
+       {
+            printf("address: %i - process: %s\n", i, main_memory[i]); 
+       }
+
     }
 }
 
+
+void initializeMemory(char* main_memory[], int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        main_memory[i] = "NULL";
+    }
+}
 
 struct Process createProcess(char* name, int size)
 {
@@ -75,10 +79,64 @@ struct Process createProcess(char* name, int size)
     return new_process;
 }
 
-void allocate_process(struct Process process, int main_memory[], int address)
+void allocate_process(struct Process process, char* main_memory[], int address)
 {
-
+    for (int i = address; i < process.size + address; i++)
+    {
+        main_memory[i] = process.name;
+    }
 }
+
+
+/*
+ * Function: first_fit
+ *  memory allocation algorithm to find first address to fit process
+ *
+ */
+void first_fit(char* main_memory[], struct Process process, int size)
+{
+    int current_memory_block_address = 0;
+    int current_memory_block_size = 0;
+    
+    for (int i = 0; i < size; i++)
+    {
+
+        // If current address isn't empty
+        if (strcmp(main_memory[i], "NULL") != 0)
+        {
+            // Set current memory block size to 0
+            current_memory_block_size = 0;
+        }
+        else
+        {
+            // Set new current address to beginning 
+            // address of next wave of available memory
+            if (current_memory_block_size == 0) 
+            {
+                current_memory_block_address = i;
+            }
+
+            // Keep incrementing ...
+            current_memory_block_size++;
+
+            //... until we find a large enough available memory block size
+            if (current_memory_block_size == process.size)
+            {
+               printf("Found available set of memory at address %d\n", current_memory_block_address); 
+               allocate_process(process, main_memory, current_memory_block_address);
+
+
+               return;
+            }
+
+
+        }
+    }
+
+
+} 
+
+
 /*
  * Function: main
  *  
@@ -114,14 +172,22 @@ int main(int argc, char** argv)
     // Memory Structure
     // -----------------------------
      
-    int main_memory[TOTAL_ALLOC_SIZE];
-    printf("number of elements in main_memory: %lu\n", NUM_ELEMENTS(main_memory));
-
-    struct Process processA = createProcess("A", 4);
+    char* main_memory[TOTAL_ALLOC_SIZE];
+    initializeMemory(main_memory, TOTAL_ALLOC_SIZE);
+    
+    struct Process processA = createProcess("A", 10);
+    struct Process processB = createProcess("B", 5);
+    struct Process test_process = createProcess("TEST", 5);
 
     allocate_process(processA, main_memory, 0);
+    allocate_process(processB, main_memory, 14);
+    printMemory(main_memory, TOTAL_ALLOC_SIZE);
 
 
+    first_fit(main_memory, test_process, TOTAL_ALLOC_SIZE); 
+    
+
+    printMemory(main_memory, TOTAL_ALLOC_SIZE);
 
     return 1;
 }

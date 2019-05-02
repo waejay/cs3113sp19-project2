@@ -9,7 +9,7 @@
 
 ### [ ] Specifications
 
-    - [ ] First Fit
+    - [x] First Fit
     - [ ] Best Fit
     - [ ] Next Fit
     - [ ] Buddy System
