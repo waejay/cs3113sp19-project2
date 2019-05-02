@@ -5,6 +5,9 @@
 
 #define NUM_ELEMENTS(x) (sizeof(x) / sizeof(x[0]))
 
+// Previously Allocated Address
+int previous_allocated_address = 0;
+
 
 // -----------------------------
 // Structures
@@ -81,16 +84,18 @@ struct Process createProcess(char* name, int size)
 
 void allocate_process(struct Process process, char* main_memory[], int address)
 {
+    previous_allocated_address = address;
     for (int i = address; i < process.size + address; i++)
     {
         main_memory[i] = process.name;
+        
     }
 }
 
 
 /*
  * Function: first_fit
- *  memory allocation algorithm to find first address to fit process
+ *  memory allocation algorithm to find first best address to fit given process
  *
  */
 void first_fit(char* main_memory[], struct Process process, int size)
@@ -138,6 +143,67 @@ void first_fit(char* main_memory[], struct Process process, int size)
 
 
 /*
+ * Function: next_fit
+ *  memory allocation algorithm to find next best address to fit given process
+ *
+ */
+void next_fit(char* main_memory[], struct Process process, int size)
+{
+    int current_memory_block_address = 0;
+    int current_memory_block_size = 0;
+    
+    for (int i = previous_allocated_address; i < size; i++)
+    {
+
+        // If current address isn't empty
+        if (strcmp(main_memory[i], "NULL") != 0)
+        {
+            // Set current memory block size to 0
+            current_memory_block_size = 0;
+        }
+        else
+        {
+            // Set new current address to beginning 
+            // address of next wave of available memory
+            if (current_memory_block_size == 0) 
+            {
+                current_memory_block_address = i;
+            }
+
+            // Keep incrementing ...
+            current_memory_block_size++;
+
+            //... until we find a large enough available memory block size
+            if (current_memory_block_size == process.size)
+            {
+               printf("Found available set of memory at address %d\n", current_memory_block_address); 
+               allocate_process(process, main_memory, current_memory_block_address);
+               previous_allocated_address = current_memory_block_address;
+
+               return;
+            }
+
+
+        }
+    }
+
+
+} 
+
+
+/*
+ * Function: best_fit
+ *  memory allocation algorithm to find ^best address to fit given process
+ *
+ *  ^note: the term 'best' here means the smallest memory block available within the entire memory structure 
+ */
+void best_fit(char* main_memory[], struct Process process, int size)
+{
+
+}
+
+
+/*
  * Function: main
  *  
  *  @argc: argument count
@@ -180,11 +246,11 @@ int main(int argc, char** argv)
     struct Process test_process = createProcess("TEST", 5);
 
     allocate_process(processA, main_memory, 0);
-    allocate_process(processB, main_memory, 14);
+    allocate_process(processB, main_memory, 15);
     printMemory(main_memory, TOTAL_ALLOC_SIZE);
 
 
-    first_fit(main_memory, test_process, TOTAL_ALLOC_SIZE); 
+    next_fit(main_memory, test_process, TOTAL_ALLOC_SIZE); 
     
 
     printMemory(main_memory, TOTAL_ALLOC_SIZE);
