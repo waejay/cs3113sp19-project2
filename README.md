@@ -10,12 +10,14 @@
 ### [ ] Specifications
 
     - [x] First Fit
-    - [ ] Best Fit
-    - [ ] Next Fit
+    - [x] Best Fit
+    - [x] Next Fit
     - [ ] Buddy System
 
 
 ### [ ] Other TODO
+    - [ ] Comment Function Summary
+    - [ ] Comment Function Details
 
 ### [ ] Makefile
 
