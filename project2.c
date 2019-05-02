@@ -397,19 +397,35 @@ void processScript(FILE* file_script, char* main_memory[], char* memory_algorith
         if (strcmp(commands[0], "RELEASE") == 0)
         {
             int isReleased = 0;
+            int current_address = -1;
+            int process_size_freed = 0;
             for (int i = 0; i < size; i++)
             {
                 if (strcmp(main_memory[i], commands[1]) == 0)
                 {
+                    // Get size first
+                    int j = i;
+                    while (strcmp(main_memory[j], commands[1]) == 0)
+                    {
+                        j++;
+                    }
+
+                    if (current_address == -1) current_address = i;
                     isReleased = 1;
                     strcpy(main_memory[i], "NULL");
+                    process_size_freed = (j - i);
                 }
             }
 
-            if (isReleased != 1)
+            if (isReleased)
             {
-               printf("FAIL RELEASE %s\n", commands[1]); 
+                printf("FREE %s %d %d\n", commands[1], process_size_freed, current_address); 
             }
+            else
+            {
+                printf("FAIL RELEASE %s\n", commands[1]); 
+            }
+
         }
 
         if (strcmp(commands[0], "LIST") == 0)
@@ -426,7 +442,7 @@ void processScript(FILE* file_script, char* main_memory[], char* memory_algorith
                     {
                         if (current_size_block > 0)
                         {
-                            printf("(%d, %d)\n", current_size_block, current_address); 
+                            printf("(%d, %d) ", current_size_block, current_address); 
                             num_allocated++;
                         }
                         else if (current_size_block == 0 && current_address + 1 == size)
@@ -445,20 +461,21 @@ void processScript(FILE* file_script, char* main_memory[], char* memory_algorith
                         {
                             if (current_size_block > 0)
                             {
-                                printf("(%d, %d)\n", current_size_block, current_address); 
+                                printf("(%d, %d) ", current_size_block, current_address); 
                                 current_size_block = 0;
                                 num_allocated++;
                             }
                         }
                     }
-
+                
                 }
+                printf("\n");
                 if (isFull)
                 {
                     printf("FULL\n");
                     break;
                 }
-
+                
                 
             }
             else if (strcmp(commands[1], "ASSIGNED") == 0)
@@ -480,7 +497,7 @@ void processScript(FILE* file_script, char* main_memory[], char* memory_algorith
                         {
                            if (strcmp(process_name, main_memory[i + 1]) != 0)
                            {
-                                printf("(%s, %d, %d)\n", process_name, process_size, current_address);                                
+                                printf("(%s, %d, %d) ", process_name, process_size, current_address);                                
                                 current_address = i + 1;
                                 process_size = 0;
                                 continue;
@@ -490,7 +507,7 @@ void processScript(FILE* file_script, char* main_memory[], char* memory_algorith
                         {
                             if (process_size > 0)
                             {
-                                printf("(%s, %d, %d)\n", process_name, process_size, current_address);
+                                printf("(%s, %d, %d) ", process_name, process_size, current_address);
                             }
                         }
                     }
@@ -505,11 +522,13 @@ void processScript(FILE* file_script, char* main_memory[], char* memory_algorith
                         break;
                     }
                 }
+            printf("\n");
             }
             else
             {
                 printf("ERROR: no option for LIST %s", commands[1]);
             }
+
 
         }
 
